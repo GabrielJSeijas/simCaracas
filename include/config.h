@@ -1,15 +1,18 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/// Parámetros de la simulación
 typedef struct {
-    int day_ticks;          // Duración del día en ticks
-    float tick_duration;    // Duración de un tick en segundos
-    int max_zone_level;     // Nivel máximo de zonas
-    char *load_file;        // Archivo a cargar (NULL si no hay)
-} Config;
+    int    ticksPorDia;       // Cuántos ticks tiene un día
+    float  segundosPorTick;   // Duración de cada tick en segundos
+    int    nivelMaximoZona;   // Nivel máximo permitido para las zonas
+    char  *archivoCarga;      // Ruta al CSV inicial (NULL si ninguno)
+} Configuracion;
 
-// Funciones para manejar configuración
-Config parse_args(int argc, char *argv[]);
-void print_config(const Config *config);
+/// Lee y procesa los argumentos de la línea de comandos
+Configuracion parsearArgumentos(int argc, char *argv[]);
+
+/// Muestra por pantalla la configuración resultante
+void mostrarConfiguracion(const Configuracion *config);
 
 #endif // CONFIG_H

@@ -1,80 +1,73 @@
+// src/utils.c
+
 #include "utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <pthread.h>    // para pthread_mutex_lock, pthread_rwlock_rdlock, etc.
+#include <pthread.h>
 
-// Umbrales para indicadores de tráfico
-#define CAPACITY_THRESHOLD_1 0.5f
-#define CAPACITY_THRESHOLD_2 1.0f
-#define CAPACITY_THRESHOLD_3 1.5f
+#define UMBRAL_SATURACION_1 0.5f
+#define UMBRAL_SATURACION_2 1.0f
+#define UMBRAL_SATURACION_3 1.5f
 
-bool is_valid_zone_code(const char *code) {
-    if (strlen(code) != 3) return false;
+bool esCodigoZonaValido(const char *codigo) {
+    if (strlen(codigo) != 3) return false;
     for (int i = 0; i < 3; i++) {
-        if (!isalpha((unsigned char)code[i])) return false;
+        if (!isalpha((unsigned char)codigo[i])) return false;
     }
     return true;
 }
 
-int calculate_required_points(int level) {
-    int capacity = 1 << level; // 2^level
-    return capacity * capacity;
+int calcularPuntosRequeridos(int nivel) {
+    int capacidad = 1 << nivel; // 2^nivel
+    return capacidad * capacidad;
 }
 
-void print_traffic_status(CityGraph *graph) {
-    // Tomar lock de lectura para todo el grafo
-    pthread_rwlock_rdlock(&graph->rwlock);
-
+void mostrarEstadoTrafico(GrafoCiudad *grafo) {
+    // Lock de lectura global
+    pthread_rwlock_rdlock(&grafo->cerrojoGrafo);
     printf("\nEstado del tráfico:\n");
-    for (int i = 0; i < graph->count; i++) {
-        // Por cada zona, tomar su mutex
-        pthread_mutex_lock(&graph->zones[i].lock);
+    for (int i = 0; i < grafo->totalZonas; i++) {
+        // Lock por zona
+        pthread_mutex_lock(&grafo->zonas[i].mutexZona);
 
-        printf("[%s] ", graph->zones[i].code);
-
-        // Norte (ejemplo; los otros sentidos serían análogos)
-        if (graph->zones[i].north) {
-            float ratio = (float)graph->zones[i].north_vehicles
-                          / (float)graph->zones[i].north_capacity;
-            printf("N:%d", graph->zones[i].north_vehicles);
-            if (ratio >= CAPACITY_THRESHOLD_3)    printf("!!! ");
-            else if (ratio >= CAPACITY_THRESHOLD_2) printf("!! ");
-            else if (ratio >= CAPACITY_THRESHOLD_1) printf("! ");
-            else                                   printf(" ");
+        printf("[%s] ", grafo->zonas[i].codigo);
+        if (grafo->zonas[i].norte) {
+            float proporcion = (float)grafo->zonas[i].vehiculosNorte
+                              / (float)grafo->zonas[i].capacidadNorte;
+            printf("N:%d", grafo->zonas[i].vehiculosNorte);
+            if (proporcion >= UMBRAL_SATURACION_3)     printf("!!! ");
+            else if (proporcion >= UMBRAL_SATURACION_2) printf("!! ");
+            else if (proporcion >= UMBRAL_SATURACION_1) printf("! ");
+            else                                      printf(" ");
         }
 
-        // Aquí podrías añadir Sur, Este y Oeste igual que Norte...
+        // Aquí podrías añadir Sur, Este y Oeste de forma similar...
 
         printf("\n");
-        pthread_mutex_unlock(&graph->zones[i].lock);
+        pthread_mutex_unlock(&grafo->zonas[i].mutexZona);
     }
-
-    pthread_rwlock_unlock(&graph->rwlock);
+    pthread_rwlock_unlock(&grafo->cerrojoGrafo);
 }
 
-void print_zone_details(Zone *zone) {
-    // Tomar mutex de la zona para leer sus campos
-    pthread_mutex_lock(&zone->lock);
-
-    printf("Código: %s\n", zone->code);
-    printf("Nivel: %d\n", zone->level);
-    if (zone->is_source) {
-        printf("Desempleados: %d\n", zone->available);
-    } else {
-        printf("Puestos libres: %d\n", zone->available);
-    }
-    printf("Puntos acumulados: %d\n", zone->points);
-
-    pthread_mutex_unlock(&zone->lock);
+void mostrarDetallesZona(Zona *zona) {
+    pthread_mutex_lock(&zona->mutexZona);
+    printf("Código           : %s\n", zona->codigo);
+    printf("Nivel            : %d\n", zona->nivel);
+    if (zona->esFuente)
+        printf("Desempleados     : %d\n", zona->disponibles);
+    else
+        printf("Puestos libres   : %d\n", zona->disponibles);
+    printf("Puntos acumulados: %d\n", zona->puntos);
+    pthread_mutex_unlock(&zona->mutexZona);
 }
 
-void print_menu_options(void) {
+void mostrarOpcionesMenuPrincipal(void) {
     printf("\n==== Menú SimCaracas ====\n");
     printf("1) Agregar zona\n");
     printf("2) Agregar arteria vial\n");
     printf("3) Ampliar arteria vial\n");
     printf("4) Guardar grafo actual\n");
-    printf("5) Salir del programa\n");
+    printf("5) Salir\n");
     printf("Seleccione una opción: ");
 }

@@ -4,67 +4,76 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#define MAX_ZONES 100  // Máximo temporal, puedes usar realloc después para hacerlo dinámico
-#define ZONE_CODE_LEN 4 // 3 letras + null terminator
+#define MAX_ZONAS           100
+#define LONGITUD_COD_ZONA    4
 
-// Direcciones para conexiones entre zonas
 typedef enum {
-    NORTH,
-    SOUTH,
-    EAST,
-    WEST,
-    NONE
-} Direction;
+    NORTE,
+    SUR,
+    ESTE,
+    OESTE,
+    NINGUNA
+} Direccion;
 
-// Estructura que representa una zona (nodo del grafo)
-typedef struct Zone {
-    char code[ZONE_CODE_LEN];  // Código de 3 letras
-    int level;                 // Nivel de la zona (potencia de 2)
-    int points;                // Puntos acumulados
-    bool is_source;           // true = fuente (hogares), false = sumidero (trabajos)
-    int available;             // Puestos disponibles (sumidero) o desempleados (fuente)
-    
-    // Conexiones a otras zonas
-    struct Zone *north;
-    struct Zone *south;
-    struct Zone *east;
-    struct Zone *west;
-    
-    // Capacidades de las arterias viales
-    int north_capacity;
-    int south_capacity;
-    int east_capacity;
-    int west_capacity;
-    
-    // Vehículos actuales en cada arteria (para tráfico)
-    int north_vehicles;
-    int south_vehicles;
-    int east_vehicles;
-    int west_vehicles;
-    
-    pthread_mutex_t lock;  // Mutex para sincronización de hilos
-} Zone;
+typedef struct Zona {
+    char            codigo[LONGITUD_COD_ZONA];
+    int             nivel;
+    int             puntos;
+    bool            esFuente;
+    int             disponibles;
 
-// Estructura principal que contiene todo el grafo de la ciudad
+    struct Zona    *norte;
+    struct Zona    *sur;
+    struct Zona    *este;
+    struct Zona    *oeste;
+
+    int             capacidadNorte;
+    int             capacidadSur;
+    int             capacidadEste;
+    int             capacidadOeste;
+
+    int             vehiculosNorte;
+    int             vehiculosSur;
+    int             vehiculosEste;
+    int             vehiculosOeste;
+
+    pthread_mutex_t mutexZona;
+} Zona;
+
 typedef struct {
-    Zone *zones;          // Array dinámico de zonas
-    int count;            // Número actual de zonas
-    int capacity;         // Capacidad actual del array
-    
-    // Estadísticas globales
-    int total_employed;
-    int total_unemployed;
-    
-    pthread_rwlock_t rwlock;  // Lock de lectura/escritura para el grafo completo
-} CityGraph;
+    Zona            *zonas;
+    int              totalZonas;
+    int              capacidadReservada;
 
-// Prototipos de funciones
-void graph_init(CityGraph *graph);
-void graph_destroy(CityGraph *graph);
-Zone* graph_add_zone(CityGraph *graph, const char *code, int level, bool is_source);
-bool graph_connect_zones(CityGraph *graph, Zone *zone1, Zone *zone2, Direction dir, int initial_capacity);
-Zone* graph_find_zone(CityGraph *graph, const char *code);
-void graph_print(const CityGraph *graph);
-Direction opposite_direction(Direction dir);
+    int              totalEmpleados;
+    int              totalDesempleados;
+
+    pthread_rwlock_t cerrojoGrafo;
+} GrafoCiudad;
+
+/* Inicialización y destrucción */
+void iniciarGrafo(GrafoCiudad *grafo);
+void destruirGrafo(GrafoCiudad *grafo);
+
+/* Operaciones sobre el grafo */
+Zona*   agregarZona      (GrafoCiudad *grafo,
+                          const char *codigo,
+                          int nivel,
+                          bool esFuente);
+bool    conectarZonas    (GrafoCiudad *grafo,
+                          Zona *z1,
+                          Zona *z2,
+                          Direccion dir,
+                          int capacidadInicial);
+Zona*   buscarZona       (GrafoCiudad *grafo,
+                          const char *codigo);
+void    mostrarGrafo     (GrafoCiudad *grafo);
+Direccion direccionOpuesta(Direccion dir);
+
+/* Amplía la capacidad de una arteria ya existente */
+bool    ampliarArteria   (GrafoCiudad *grafo,
+                          Zona *zonaOrigen,
+                          Zona *zonaDestino,
+                          int nuevaCapacidad);
 
 #endif // GRAPH_H

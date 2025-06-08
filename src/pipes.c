@@ -1,30 +1,30 @@
+// src/pipes.c
+
 #include "pipes.h"
-#include "graph.h"
-#include <unistd.h>
-#include <string.h>
+#include <unistd.h>   // write(), read()
 
-void send_zone_update(int pipe_fd, const Zone *zone) {
-    ZoneMessage msg;
-    msg.type = ZONE_UPDATE;
-    msg.zone = *zone;
-    
-    write(pipe_fd, &msg, sizeof(msg));
+void enviarActualizacionZona(int fdTuberia, const Zona *zona) {
+    MensajeZona mensaje;
+    mensaje.tipo = ACTUALIZACION_ZONA;
+    mensaje.zona = *zona;
+    write(fdTuberia, &mensaje, sizeof(mensaje));
 }
 
-void send_traffic_update(int pipe_fd, TrafficUpdate *update) {
-    write(pipe_fd, update, sizeof(*update));
+void enviarActualizacionTransito(int fdTuberia,
+                                 const ActualizacionTransito *actualizacion) {
+    write(fdTuberia, actualizacion, sizeof(*actualizacion));
 }
 
-bool receive_message(int pipe_fd, void *buffer, size_t size) {
-    return read(pipe_fd, buffer, size) == (ssize_t)size;
+bool recibirMensaje(int fdTuberia, void *destinoMensaje, size_t tam) {
+    return read(fdTuberia, destinoMensaje, tam) == (ssize_t)tam;
 }
 
-void send_day_start(int pipe_fd) {
-    DayMessage msg = { .type = DAY_START };
-    write(pipe_fd, &msg, sizeof(msg));
+void enviarInicioDia(int fdTuberia) {
+    MensajeDia mensaje = { .tipo = INICIO_DIA };
+    write(fdTuberia, &mensaje, sizeof(mensaje));
 }
 
-void send_day_end(int pipe_fd) {
-    DayMessage msg = { .type = DAY_END };
-    write(pipe_fd, &msg, sizeof(msg));
+void enviarFinDia(int fdTuberia) {
+    MensajeDia mensaje = { .tipo = FIN_DIA };
+    write(fdTuberia, &mensaje, sizeof(mensaje));
 }

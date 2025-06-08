@@ -1,24 +1,47 @@
 #ifndef ZONE_H
 #define ZONE_H
 
+#include <stdbool.h>
 #include "graph.h"
 
-// Estructura para nodos de lista ordenada
-typedef struct ZoneListNode {
-    Zone *zone;
-    int priority;  // Prioridad para ordenamiento (ej: puestos disponibles o residentes)
-    struct ZoneListNode *next;
-} ZoneListNode;
+/// Nodo para lista ordenada de zonas según prioridad
+typedef struct NodoListaZona {
+    Zona                   *zona;       ///< Puntero a la zona
+    int                     prioridad;  ///< Prioridad (disponibles o residentes)
+    struct NodoListaZona   *siguiente;  ///< Siguiente nodo en la lista
+} NodoListaZona;
 
-// Funciones de lista ordenada
-ZoneListNode* create_zone_list_node(Zone *zone, int priority);
-void insert_sorted(ZoneListNode **head, Zone *zone, int priority);
-Zone* pop_highest_priority(ZoneListNode **head);
-void free_zone_list(ZoneListNode *head);
+/// Crea un nodo para la lista de prioridades
+NodoListaZona* crearNodoListaZona(Zona *zona, int prioridad);
 
-// Funciones principales
-void zone_bfs_search(Zone *start, bool find_sink, CityGraph *graph);
-void assign_residents_to_jobs(Zone *source, Zone *sink, CityGraph *graph);
-void update_zone_points(CityGraph *graph, bool is_morning);
+/// Inserta una zona en la lista ordenada por prioridad (descendente)
+void insertarNodoPorPrioridad(NodoListaZona **lista,
+                              Zona *zona,
+                              int prioridad);
 
-#endif
+/// Extrae la zona de mayor prioridad (cabeza de la lista)
+Zona* extraerZonaMayorPrioridad(NodoListaZona **lista);
+
+/// Libera todos los nodos de la lista de prioridades
+void liberarListaZonas(NodoListaZona *lista);
+
+/// Busca la zona destino/source en anchura priorizada (BFS con cola ordenada).
+/// @param inicio         Zona de partida
+/// @param buscarSumidero true = buscar sumidero; false = buscar fuente con disponibles 
+/// @param grafo          GrafoCiudad donde buscar
+void buscarZonaBFS(Zona *inicio,
+                   bool buscarSumidero,
+                   GrafoCiudad *grafo);
+
+/// Asigna residentes de una zona fuente a un sumidero (empleo),
+/// actualiza disponibles y estadísticas globales.
+void asignarResidentesATrabajo(Zona *fuente,
+                               Zona *sumidero,
+                               GrafoCiudad *grafo);
+
+/// Actualiza los puntos de cada zona según la fase del día.
+/// esMañana=true: puntos para sumideros; false: puntos para fuentes.
+void actualizarPuntosZona(GrafoCiudad *grafo,
+                          bool esMañana);
+
+#endif // ZONE_H

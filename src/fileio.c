@@ -1,116 +1,126 @@
 // src/fileio.c
 
-#include "fileio.h"    // load_city_from_csv, save_city_to_csv :contentReference[oaicite:0]{index=0}
+#include "fileio.h"
 #include "graph.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
-#define MAX_LINE_LEN 1024
+#define LONGITUD_LINEA 1024
 
-bool load_city_from_csv(CityGraph *graph, const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        fprintf(stderr, "Error abriendo %s: %s\n", filename, strerror(errno));
+bool cargarCiudadDesdeCSV(GrafoCiudad *ciudad,
+                          const char *rutaArchivo)
+{
+    FILE *fp = fopen(rutaArchivo, "r");
+    if (!fp) {
+        fprintf(stderr, "No se pudo abrir '%s': %s\n",
+                rutaArchivo, strerror(errno));
         return false;
     }
 
-    char line[MAX_LINE_LEN];
+    char linea[LONGITUD_LINEA];
     // Saltar cabecera
-    if (!fgets(line, sizeof(line), file)) {
-        fclose(file);
+    if (!fgets(linea, sizeof linea, fp)) {
+        fclose(fp);
         return false;
     }
 
-    while (fgets(line, sizeof(line), file)) {
-        char *tokens[12];
+    while (fgets(linea, sizeof linea, fp)) {
+        char *partes[12];
         char *saveptr = NULL;
-        int i = 0;
+        int   n       = 0;
 
-        for (char *tok = strtok_r(line, ",", &saveptr);
-             tok && i < 11;
+        for (char *tok = strtok_r(linea, ",", &saveptr);
+             tok && n < 12;
              tok = strtok_r(NULL, ",", &saveptr))
         {
-            // Eliminar comillas si las hubiera
+            // Quitar comillas si existen
             if (tok[0]=='"' && tok[strlen(tok)-1]=='"') {
                 tok[strlen(tok)-1] = '\0';
                 tok++;
             }
-            tokens[i++] = tok;
+            partes[n++] = tok;
         }
-        if (i < 11) continue;
+        if (n < 12) continue;
 
-        // tokens[0]=code, [1]=type(F/S), [2]=level, [3]=points,
-        // [4]=north, [5]=capN, [6]=south, [7]=capS, [8]=east, [9]=capE, [10]=west, [11]=capW
-        const char *code    = tokens[0];
-        bool       is_src   = (tokens[1][0]=='F');
-        int        level    = atoi(tokens[2]);
-        int        points   = atoi(tokens[3]);
+        const char *codigo   = partes[0];
+        bool        esFuente = (partes[1][0]=='F');
+        int         nivel    = atoi(partes[2]);
+        int         puntos   = atoi(partes[3]);
 
-        Zone *z = graph_add_zone(graph, code, level, is_src);
+        // Crear la zona en el grafo
+        Zona *z = agregarZona(ciudad, codigo, nivel, esFuente);
         if (!z) continue;
-        z->points = points;
+        z->puntos = puntos;
 
-        struct { Direction dir; const char *nbr; const char *cap; } conns[4] = {
-            { NORTH, tokens[4], tokens[5] },
-            { SOUTH, tokens[6], tokens[7] },
-            { EAST,  tokens[8], tokens[9] },
-            { WEST,  tokens[10], tokens[11] }
+        struct {
+            Direccion dir;
+            const char *vecina;
+            const char *cap;
+        } conns[4] = {
+            { NORTE, partes[4],  partes[5]  },
+            { SUR,   partes[6],  partes[7]  },
+            { ESTE,  partes[8],  partes[9]  },
+            { OESTE, partes[10], partes[11] }
         };
 
-        for (int j = 0; j < 4; j++) {
-            if (conns[j].nbr[0] != '\0') {
-                Zone *o = graph_find_zone(graph, conns[j].nbr);
-                if (o) {
-                    int cap = atoi(conns[j].cap);
-                    graph_connect_zones(graph, z, o, conns[j].dir, cap);
+        for (int i = 0; i < 4; i++) {
+            if (conns[i].vecina[0] != '\0') {
+                Zona *otra = buscarZona(ciudad, conns[i].vecina);
+                if (otra) {
+                    int cap = atoi(conns[i].cap);
+                    conectarZonas(ciudad, z, otra, conns[i].dir, cap);
                 }
             }
         }
     }
 
-    fclose(file);
+    fclose(fp);
     return true;
 }
 
-bool save_city_to_csv(const CityGraph *city, const char *filename) {
-    FILE *f = fopen(filename, "w");
-    if (!f) {
-        fprintf(stderr, "Error creando %s: %s\n", filename, strerror(errno));
+bool guardarCiudadEnCSV(const GrafoCiudad *ciudad,
+                        const char *rutaArchivo)
+{
+    FILE *fp = fopen(rutaArchivo, "w");
+    if (!fp) {
+        fprintf(stderr, "No se pudo crear '%s': %s\n",
+                rutaArchivo, strerror(errno));
         return false;
     }
-    // Cabecera
-    fprintf(f,
-        "code,type,level,points,"
-        "north,cap_north,"
-        "south,cap_south,"
-        "east,cap_east,"
-        "west,cap_west\n");
 
-    for (int i = 0; i < city->count; i++) {
-        const Zone *z = &city->zones[i];
-        fprintf(f,
+    // Cabecera
+    fprintf(fp,
+        "codigo,tipo,nivel,puntos,"
+        "norte,cap_norte,"
+        "sur,cap_sur,"
+        "este,cap_este,"
+        "oeste,cap_oeste\n");
+
+    for (int i = 0; i < ciudad->totalZonas; i++) {
+        const Zona *z = &ciudad->zonas[i];
+        fprintf(fp,
             "%s,%c,%d,%d,"
             "%s,%d,"
             "%s,%d,"
             "%s,%d,"
             "%s,%d\n",
-            z->code,
-            z->is_source ? 'F' : 'S',
-            z->level,
-            z->points,
-            z->north ? z->north->code : "",
-            z->north_capacity,
-            z->south ? z->south->code : "",
-            z->south_capacity,
-            z->east  ? z->east->code  : "",
-            z->east_capacity,
-            z->west  ? z->west->code  : "",
-            z->west_capacity
+            z->codigo,
+            z->esFuente ? 'F' : 'S',
+            z->nivel,
+            z->puntos,
+            z->norte   ? z->norte->codigo   : "",
+            z->capacidadNorte,
+            z->sur     ? z->sur->codigo     : "",
+            z->capacidadSur,
+            z->este    ? z->este->codigo    : "",
+            z->capacidadEste,
+            z->oeste   ? z->oeste->codigo   : "",
+            z->capacidadOeste
         );
     }
 
-    fclose(f);
+    fclose(fp);
     return true;
 }

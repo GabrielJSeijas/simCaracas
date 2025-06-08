@@ -3,18 +3,34 @@
 
 #include "graph.h"
 
-typedef struct Caravan {
-    Zone *current;
-    Zone *destination;
-    int vehicle_count;
-    struct Caravan *next;
-} Caravan;
+/// Caravana de vehículos moviéndose de una zona a otra
+typedef struct Caravana {
+    Zona            *zonaActual;        ///< Zona de partida o posición actual
+    Zona            *zonaDestino;       ///< Zona de llegada
+    int              cantidadVehiculos; ///< Número de vehículos en la caravana
+    struct Caravana *siguiente;         ///< Siguiente caravana en la lista
+} Caravana;
 
-// Funciones principales de tráfico
-void init_traffic_system(CityGraph *graph);
-void simulate_morning_traffic(CityGraph *graph, int day_ticks);
-void simulate_evening_traffic(CityGraph *graph, int day_ticks);
-void update_traffic_flows(CityGraph *graph);
-void free_caravans(Caravan *caravan);
+/// Inicializa las estructuras del sistema de tráfico.
+/// @param ciudad Puntero al grafo de la ciudad
+void inicializarSistemaTrafico(GrafoCiudad *ciudad);
+
+/// Simula el tráfico matutino durante 'ticksPorDia' ticks.
+/// @param ciudad      Puntero al grafo de la ciudad
+/// @param ticksPorDia Número de ticks a simular
+void simularTraficoMatutino(GrafoCiudad *ciudad, int ticksPorDia);
+
+/// Simula el tráfico vespertino durante 'ticksPorDia' ticks.
+/// @param ciudad      Puntero al grafo de la ciudad
+/// @param ticksPorDia Número de ticks a simular
+void simularTraficoVespertino(GrafoCiudad *ciudad, int ticksPorDia);
+
+/// Actualiza el flujo de vehículos para todas las caravanas activas.
+/// @param ciudad Puntero al grafo de la ciudad
+void actualizarFlujosTrafico(GrafoCiudad *ciudad);
+
+/// Libera la memoria de una lista de caravanas.
+/// @param caravana Puntero a la primera caravana de la lista
+void liberarCaravanas(Caravana *caravana);
 
 #endif // TRAFFIC_H

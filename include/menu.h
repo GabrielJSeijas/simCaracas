@@ -4,9 +4,9 @@
 #include "graph.h"
 #include "config.h"
 
-/// Arranca el bucle interactivo del menú.
-/// @param city   Puntero al grafo de la ciudad ya inicializado
-/// @param config Configuración de la simulación (day_ticks, etc.)
-void menu_loop(CityGraph *city, Config config);
+/// Bucle interactivo principal.
+/// @param grafo        Puntero al grafo de la ciudad
+/// @param configuracion Parámetros de simulación parseados
+void iniciarMenuInteractivo(GrafoCiudad *grafo, Configuracion configuracion);
 
 #endif // MENU_H

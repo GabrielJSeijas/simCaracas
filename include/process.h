@@ -2,16 +2,35 @@
 #define PROCESS_H
 
 #include "graph.h"
+#include "config.h"
 
-typedef struct {
-    int day_ticks;
-    float tick_duration;
-    int max_zone_level;
-} Config;
+/// Crea y lanza los procesos hijos (zona y tránsito)
+void iniciarProcesosHijos(GrafoCiudad *grafo, Configuracion configuracion);
 
-void create_child_processes(CityGraph *graph, Config config);
-void zone_process(CityGraph *graph, int read_pipe, Config config);
-void traffic_process(CityGraph *graph, int read_pipe, Config config);
-void main_process_loop(CityGraph *graph, int zone_pipe, int traffic_pipe, Config config);
+/// Ciclo de vida del proceso encargado de manejar zonas
+/// @param grafo           Puntero al grafo de la ciudad
+/// @param tuberiaLectura  Descriptor de lectura de la tubería de zona
+/// @param configuracion   Parámetros de simulación
+void procesoZona(GrafoCiudad *grafo,
+                 int tuberiaLectura,
+                 Configuracion configuracion);
 
-#endif
+/// Ciclo de vida del proceso encargado de manejar tránsito
+/// @param grafo           Puntero al grafo de la ciudad
+/// @param tuberiaLectura  Descriptor de lectura de la tubería de tránsito
+/// @param configuracion   Parámetros de simulación
+void procesoTransito(GrafoCiudad *grafo,
+                     int tuberiaLectura,
+                     Configuracion configuracion);
+
+/// Bucle principal del proceso padre para coordinar el día
+/// @param grafo              Puntero al grafo de la ciudad
+/// @param tuberiaZona        Descriptor de escritura para zona
+/// @param tuberiaTransito    Descriptor de escritura para tránsito
+/// @param configuracion      Parámetros de simulación
+void bucleProcesoPrincipal(GrafoCiudad *grafo,
+                           int tuberiaZona,
+                           int tuberiaTransito,
+                           Configuracion configuracion);
+
+#endif // PROCESS_H

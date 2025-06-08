@@ -2,21 +2,21 @@
 #define UTILS_H
 
 #include <stdbool.h>
-#include "graph.h"      // define CityGraph y Zone
+#include "graph.h"  // GrafoCiudad, Zona
 
-// Comprueba que 'code' tenga exactamente 3 letras A–Z
-bool is_valid_zone_code(const char *code);
+/// Verifica si el código tiene exactamente 3 letras.
+bool esCodigoZonaValido(const char *codigo);
 
-// Calcula puntos requeridos: (2^level)²
-int calculate_required_points(int level);
+/// Calcula los puntos requeridos según el nivel ( (2^nivel)² ).
+int calcularPuntosRequeridos(int nivel);
 
-// Imprime el estado de tráfico; toma bloqueo de lectura del grafo
-void print_traffic_status(CityGraph *graph);
+/// Muestra por pantalla el estado del tráfico en cada zona.
+void mostrarEstadoTrafico(GrafoCiudad *grafo);
 
-// Imprime los detalles de una zona; toma bloqueo del mutex de la zona
-void print_zone_details(Zone *zone);
+/// Muestra información detallada de una zona.
+void mostrarDetallesZona(Zona *zona);
 
-// Muestra las opciones del menú principal
-void print_menu_options(void);
+/// Imprime en pantalla las opciones del menú principal.
+void mostrarOpcionesMenuPrincipal(void);
 
 #endif // UTILS_H
