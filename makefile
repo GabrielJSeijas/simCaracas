@@ -1,38 +1,52 @@
 # Configuración del compilador
-CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -pthread -g
-LDFLAGS = -pthread
+CC       = gcc
+CFLAGS   = -Wall -Wextra -pedantic -pthread -g -I$(INCDIR)
+LDFLAGS  = -pthread
 
 # Nombre del ejecutable
-TARGET = simcaracas
+TARGET   = simcaracas
 
 # Directorios
-SRCDIR = src
-INCDIR = include
-OBJDIR = obj
-BINDIR = bin
+SRCDIR   = src
+INCDIR   = include
+OBJDIR   = obj
+BINDIR   = bin
 
 # Fuentes y objetos
-SOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
+SOURCES  = $(wildcard $(SRCDIR)/*.c)
+OBJECTS  = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
 
-# Regla principal
+# --------------------------------------------------------
+.PHONY: all directories clean rebuild run
+
+# Target por defecto: crea directorios y compila todo
 all: directories $(BINDIR)/$(TARGET)
 
-# Crear directorios necesarios
+# Crea los directorios obj/ y bin/ si no existen
 directories:
 	@mkdir -p $(OBJDIR) $(BINDIR)
 
-# Enlazar objetos
+# Enlaza todos los objetos en el binario final
 $(BINDIR)/$(TARGET): $(OBJECTS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 
-# Compilar cada fuente
+# Compila cada .c de src/ a .o en obj/
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpieza
+# --------------------------------------------------------
+# run: compila y ejecuta el simulador,
+# sin parámetros (entra en el menú interactivo)
+run: all
+	@echo "=== Ejecutando $(TARGET) ==="
+	@$(BINDIR)/$(TARGET)
+
+# rebuild: fuerza limpieza y compilación desde cero
+rebuild: clean all
+
+# clean: elimina binarios y objetos
 clean:
-	rm -rf $(OBJDIR) $(BINDIR)
+	@echo "Limpiando..."
+	@rm -rf $(OBJDIR) $(BINDIR)
+	@echo "Listo."
 
-.PHONY: all directories clean
