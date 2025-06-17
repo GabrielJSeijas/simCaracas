@@ -1,6 +1,6 @@
 #ifndef TRAFFIC_H
 #define TRAFFIC_H
-
+#include "config.h"
 #include "graph.h"
 
 /// Caravana de vehículos moviéndose de una zona a otra
@@ -32,5 +32,9 @@ void actualizarFlujosTrafico(GrafoCiudad *ciudad);
 /// Libera la memoria de una lista de caravanas.
 /// @param caravana Puntero a la primera caravana de la lista
 void liberarCaravanas(Caravana *caravana);
+
+void simularDia(GrafoCiudad *grafo, Configuracion configuracion);
+/// Simula un dia completo de tráfico en la ciudad.
+/// @param grafo Puntero al grafo de la ciudad
 
 #endif // TRAFFIC_H

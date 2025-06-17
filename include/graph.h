@@ -22,6 +22,7 @@ typedef struct Zona {
     bool            esFuente;
     int             disponibles;
 
+
     struct Zona    *norte;
     struct Zona    *sur;
     struct Zona    *este;
@@ -36,6 +37,7 @@ typedef struct Zona {
     int             vehiculosSur;
     int             vehiculosEste;
     int             vehiculosOeste;
+    int             x, y; 
 
     pthread_mutex_t mutexZona;
 } Zona;

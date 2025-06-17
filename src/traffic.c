@@ -21,6 +21,33 @@ void inicializarSistemaTrafico(GrafoCiudad *ciudad) {
     caravanasVespertinas = NULL;
 }
 
+void simularDia(GrafoCiudad *grafo, Configuracion configuracion) {
+    int ticksPorFase = configuracion.ticksPorDia / 2;
+
+    printf("\n--- Simulando MAÑANA ---\n");
+    // Aquí deberías simular el tráfico de la mañana
+    simularTraficoMatutino(grafo, ticksPorFase);
+
+    // Al terminar la mañana, actualizar puntos de sumideros
+    actualizarPuntosZona(grafo, true); // true: mañana
+
+    printf("--- Simulando TARDE ---\n");
+    // Simular tráfico de la tarde (retorno)
+    simularTraficoVespertino(grafo, ticksPorFase);
+
+    // Al terminar la tarde, actualizar puntos de fuentes
+    actualizarPuntosZona(grafo, false); // false: tarde
+
+    // Mostrar estadísticas al final del día
+    printf("\nResumen del día:\n");
+    pthread_rwlock_rdlock(&grafo->cerrojoGrafo);
+    printf("  - Empleados    : %d\n", grafo->totalEmpleados);
+    printf("  - Desempleados : %d\n", grafo->totalDesempleados);
+    pthread_rwlock_unlock(&grafo->cerrojoGrafo);
+}
+           
+
+
 void simularTraficoMatutino(GrafoCiudad *ciudad, int ticksPorDia) {
     // Generar caravanas desde cada fuente hacia el este si corresponde
     pthread_rwlock_rdlock(&ciudad->cerrojoGrafo);

@@ -2,11 +2,10 @@
 #define MENU_H
 
 #include "graph.h"
-#include "config.h"
 
-/// Bucle interactivo principal.
-/// @param grafo        Puntero al grafo de la ciudad
-/// @param configuracion Parámetros de simulación parseados
-void iniciarMenuInteractivo(GrafoCiudad *grafo, Configuracion configuracion);
+void agregarZonaMenu(GrafoCiudad *grafo);
+void agregarArteriaMenu(GrafoCiudad *grafo);
+void ampliarArteriaMenu(GrafoCiudad *grafo);
+void guardarGrafoMenu(GrafoCiudad *grafo);
 
 #endif // MENU_H

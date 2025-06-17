@@ -19,4 +19,12 @@ void mostrarDetallesZona(Zona *zona);
 /// Imprime en pantalla las opciones del menú principal.
 void mostrarOpcionesMenuPrincipal(void);
 
+/// Asigna coordenadas (x, y) a cada zona del grafo.
+void asignarCoordenadas(GrafoCiudad *grafo);
+
+/// Imprime el grafo de la ciudad en un formato de cuadrícula.
+void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo);
+
+
+
 #endif // UTILS_H
