@@ -44,7 +44,6 @@ int main(int argc, char *argv[]) {
             printf("\n");
             printf("\n");
             asignarCoordenadas(&grafo);  // <--- COORDENADAS
-            imprimirCiudadEnGridAvanzado(&grafo); // <--- GRID
         }
     }
 
@@ -53,14 +52,11 @@ int main(int argc, char *argv[]) {
     int salir = 0, dia = 1;
     while (!salir) {
         printf("\n==============================\n");
-        printf("        >>> Día %d <<<\n          ", dia);
+        printf("        >>> Día %d <<<\n", dia);
         printf("==============================\n");
 
         // 1. Simula el día completo (mañana y tarde, etc.)
         simularDia(&grafo, configuracion);
-
-        // 2. Muestra el grafo actualizado al terminar el día
-        mostrarGrafo(&grafo);
 
         // 3. Menú de acciones
         while (1) {

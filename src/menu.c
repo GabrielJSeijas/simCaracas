@@ -7,13 +7,24 @@
 
 // Agrega una zona
 void agregarZonaMenu(GrafoCiudad *grafo) {
-    char codigo[4];
+    char codigo[16];
     int nivel;
-    char resp[8];
+    char resp[16];
 
     printf("Código de zona (3 letras): ");
     if (!fgets(codigo, sizeof(codigo), stdin)) return;
     codigo[strcspn(codigo, "\r\n")] = '\0';
+
+    if (strlen(codigo) != 3) {
+        printf("El código debe tener exactamente 3 caracteres.\n");
+        return;
+    }
+
+    // Verifica si ya existe una zona con ese código
+    if (buscarZona(grafo, codigo) != NULL) {
+        printf("Ya existe una zona con el código %s.\n", codigo);
+        return;
+    }
 
     printf("Nivel (potencia de 2): ");
     char nivelStr[16];
@@ -31,9 +42,37 @@ void agregarZonaMenu(GrafoCiudad *grafo) {
         printf("Error al agregar la zona %s.\n", codigo);
 }
 
-// Agrega una arteria vial
+
+// Busca la primera dirección libre y conecta ambos nodos
+int conectarZonasBidireccional(GrafoCiudad *grafo, Zona *a, Zona *b, int capacidad) {
+    // Prueba todas las direcciones posibles desde a hacia b
+    // y conecta en la primera disponible
+    if (!a->norte && !b->sur) {
+        a->norte = b; a->capacidadNorte = capacidad;
+        b->sur = a;  b->capacidadSur   = capacidad;
+        return 1;
+    }
+    if (!a->sur && !b->norte) {
+        a->sur = b;  a->capacidadSur   = capacidad;
+        b->norte = a; b->capacidadNorte = capacidad;
+        return 1;
+    }
+    if (!a->este && !b->oeste) {
+        a->este = b; a->capacidadEste = capacidad;
+        b->oeste = a; b->capacidadOeste = capacidad;
+        return 1;
+    }
+    if (!a->oeste && !b->este) {
+        a->oeste = b; a->capacidadOeste = capacidad;
+        b->este = a;  b->capacidadEste  = capacidad;
+        return 1;
+    }
+    // Si no hay dirección disponible
+    return 0;
+}
+
 void agregarArteriaMenu(GrafoCiudad *grafo) {
-    char origen[4], destino[4];
+    char origen[16], destino[16];
     int capacidad;
 
     printf("Zona origen: ");
@@ -53,16 +92,17 @@ void agregarArteriaMenu(GrafoCiudad *grafo) {
     Zona *z2 = buscarZona(grafo, destino);
     if (!z1 || !z2) {
         puts("Alguna zona no existe.");
-    } else if (!conectarZonas(grafo, z1, z2, ESTE, capacidad)) {
-        puts("No se pudo crear la arteria (quizá ya existe).");
+    } else if (conectarZonasBidireccional(grafo, z1, z2, capacidad)) {
+        printf("Arteria %s <-> %s creada (cap=%d) en la primera dirección libre.\n", origen, destino, capacidad);
     } else {
-        printf("Arteria %s->%s creada (cap=%d).\n", origen, destino, capacidad);
+        puts("No se pudo crear la arteria: no hay direcciones libres.");
     }
 }
 
+
 // Amplía una arteria vial
 void ampliarArteriaMenu(GrafoCiudad *grafo) {
-    char origen[4], destino[4];
+    char origen[16], destino[16];
     int nuevaCap;
 
     printf("Zona origen: ");
@@ -102,3 +142,4 @@ void guardarGrafoMenu(GrafoCiudad *grafo) {
     else
         printf("Error al guardar en '%s'.\n", nombreArchivo);
 }
+

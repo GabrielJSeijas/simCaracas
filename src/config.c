@@ -6,7 +6,7 @@
 Configuracion parsearArgumentos(int argc, char *argv[]) {
     // Valores por defecto
     Configuracion configuracion = {
-        .ticksPorDia      = 64,
+        .ticksPorDia      = 12,
         .segundosPorTick  = 1.0f,
         .nivelMaximoZona  = 10,
         .archivoCarga     = NULL

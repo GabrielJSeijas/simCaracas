@@ -1,10 +1,9 @@
-// src/traffic.c
-
 #include "traffic.h"
 #include "graph.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <stdio.h>
 
 /// Umbrales de saturación para emitir señales (no usados en este ejemplo)
 #define UMBRAL_CAPACIDAD_1 0.5f
@@ -24,46 +23,33 @@ void inicializarSistemaTrafico(GrafoCiudad *ciudad) {
 void simularDia(GrafoCiudad *grafo, Configuracion configuracion) {
     int ticksPorFase = configuracion.ticksPorDia / 2;
 
-    printf("\n--- Simulando MAÑANA ---\n");
-    // Aquí deberías simular el tráfico de la mañana
     simularTraficoMatutino(grafo, ticksPorFase);
+    actualizarPuntosZona(grafo, true);
 
-    // Al terminar la mañana, actualizar puntos de sumideros
-    actualizarPuntosZona(grafo, true); // true: mañana
-
-    printf("--- Simulando TARDE ---\n");
-    // Simular tráfico de la tarde (retorno)
     simularTraficoVespertino(grafo, ticksPorFase);
+    actualizarPuntosZona(grafo, false);
 
-    // Al terminar la tarde, actualizar puntos de fuentes
-    actualizarPuntosZona(grafo, false); // false: tarde
+    // Limpia la pantalla antes del resumen
+    printf("\033[2J\033[H");
 
-    // Mostrar estadísticas al final del día
+    // SOLO IMPRIME EL RESUMEN Y EL MENÚ
     printf("\nResumen del día:\n");
+    imprimirCiudadEnGridAvanzado(grafo);
     pthread_rwlock_rdlock(&grafo->cerrojoGrafo);
     printf("  - Empleados    : %d\n", grafo->totalEmpleados);
     printf("  - Desempleados : %d\n", grafo->totalDesempleados);
     pthread_rwlock_unlock(&grafo->cerrojoGrafo);
 }
-           
+
 
 
 void simularTraficoMatutino(GrafoCiudad *ciudad, int ticksPorDia) {
-    // Generar caravanas desde cada fuente hacia el este si corresponde
     pthread_rwlock_rdlock(&ciudad->cerrojoGrafo);
     for (int i = 0; i < ciudad->totalZonas; i++) {
         if (ciudad->zonas[i].esFuente) {
             pthread_mutex_lock(&ciudad->zonas[i].mutexZona);
-
-            // Vehículos = residentes empleados (ejemplo simplificado)
-            int vehiculos = (1 << ciudad->zonas[i].nivel) / 2
-                             - ciudad->zonas[i].disponibles;
-
-            // Si hay vehículos y existe una vía este a sumidero, creamos caravana
-            if (vehiculos > 0
-                && ciudad->zonas[i].este
-                && !ciudad->zonas[i].este->esFuente)
-            {
+            int vehiculos = (1 << ciudad->zonas[i].nivel) / 2 - ciudad->zonas[i].disponibles;
+            if (vehiculos > 0 && ciudad->zonas[i].este && !ciudad->zonas[i].este->esFuente) {
                 Caravana *nueva = malloc(sizeof(Caravana));
                 nueva->zonaActual        = &ciudad->zonas[i];
                 nueva->zonaDestino       = ciudad->zonas[i].este;
@@ -71,24 +57,35 @@ void simularTraficoMatutino(GrafoCiudad *ciudad, int ticksPorDia) {
                 nueva->siguiente         = caravanasMatutinas;
                 caravanasMatutinas      = nueva;
             }
-
             pthread_mutex_unlock(&ciudad->zonas[i].mutexZona);
         }
     }
     pthread_rwlock_unlock(&ciudad->cerrojoGrafo);
 
-    // Simular cada tick con pausa fija (100 ms)
     for (int t = 0; t < ticksPorDia; t++) {
+        // LIMPIAR PANTALLA
+        printf("\033[2J\033[H");
+
+        printf("--- Simulando MAÑANA ---\n");
+        printf("Tick %d/%d\n\n", t+1, ticksPorDia);
+
+        // Imprime el grafo en grid avanzado
+        imprimirCiudadEnGridAvanzado(ciudad);
+
         actualizarFlujosTrafico(ciudad);
-        usleep(100000);
+        usleep(500000);
     }
 }
 
 void simularTraficoVespertino(GrafoCiudad *ciudad, int ticksPorDia) {
-    // Por simplicidad, usamos la misma lógica de actualización
     for (int t = 0; t < ticksPorDia; t++) {
+        // LIMPIAR PANTALLA
+        printf("\033[2J\033[H");
+        printf("--- Simulando TARDE ---\n");
+        printf("Tick %d/%d\n\n", t+1, ticksPorDia);
+        imprimirCiudadEnGridAvanzado(ciudad);
         actualizarFlujosTrafico(ciudad);
-        usleep(100000);
+        usleep(500000);
     }
 }
 

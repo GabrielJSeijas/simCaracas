@@ -148,39 +148,6 @@ Zona* buscarZona(GrafoCiudad *grafo,
     return NULL;
 }
 
-void mostrarGrafo(GrafoCiudad *grafo) {
-    pthread_rwlock_rdlock(&grafo->cerrojoGrafo);
-    printf("La ciudad tiene %d zonas:\n", grafo->totalZonas);
-    for (int i = 0; i < grafo->totalZonas; i++) {
-        Zona *z = &grafo->zonas[i];
-        pthread_mutex_lock(&z->mutexZona);
-
-        printf("[%s] Nivel %d %s | Puntos: %d | ",
-               z->codigo,
-               z->nivel,
-               z->esFuente ? "Fuente" : "Sumidero",
-               z->puntos);
-
-        if (z->esFuente) {
-            printf("Desempleados: %d\n", z->disponibles);
-        } else {
-            printf("Puestos libres: %d\n", z->disponibles);
-        }
-
-        printf(" Conexiones: N(%s:%d/%d) S(%s:%d/%d) E(%s:%d/%d) O(%s:%d/%d)\n",
-               z->norte   ? z->norte->codigo   : "--",
-               z->vehiculosNorte, z->capacidadNorte,
-               z->sur     ? z->sur->codigo     : "--",
-               z->vehiculosSur,   z->capacidadSur,
-               z->este    ? z->este->codigo    : "--",
-               z->vehiculosEste,  z->capacidadEste,
-               z->oeste   ? z->oeste->codigo   : "--",
-               z->vehiculosOeste, z->capacidadOeste);
-
-        pthread_mutex_unlock(&z->mutexZona);
-    }
-    pthread_rwlock_unlock(&grafo->cerrojoGrafo);
-}
 
 Direccion direccionOpuesta(Direccion dir) {
     switch (dir) {
@@ -191,6 +158,8 @@ Direccion direccionOpuesta(Direccion dir) {
         default:    return NINGUNA;
     }
 }
+
+
 
 bool ampliarArteria(GrafoCiudad *grafo,
                    Zona *z1,

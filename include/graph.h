@@ -68,7 +68,6 @@ bool    conectarZonas    (GrafoCiudad *grafo,
                           int capacidadInicial);
 Zona*   buscarZona       (GrafoCiudad *grafo,
                           const char *codigo);
-void    mostrarGrafo     (GrafoCiudad *grafo);
 Direccion direccionOpuesta(Direccion dir);
 
 /* Amplía la capacidad de una arteria ya existente */
