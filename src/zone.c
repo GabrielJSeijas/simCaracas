@@ -13,6 +13,7 @@ NodoListaZona* crearNodoListaZona(Zona *zona, int prioridad) {
     nodo->prioridad = prioridad;
     nodo->siguiente = NULL;
     return nodo;
+    
 }
 
 void insertarNodoPorPrioridad(NodoListaZona **lista,
@@ -25,6 +26,7 @@ void insertarNodoPorPrioridad(NodoListaZona **lista,
     // (opcional) recabar la disponibilidad real, aunque no se use luego
     pthread_mutex_lock(&zona->mutexZona);
     int disponibles = zona->disponibles;
+    (void)disponibles;
     pthread_mutex_unlock(&zona->mutexZona);
 
     if (*lista == NULL || prioridad > (*lista)->prioridad) {

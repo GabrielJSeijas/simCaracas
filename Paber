@@ -1,3 +1,0 @@
-codigo,tipo,nivel,puntos,norte,cap_norte,sur,cap_sur,este,cap_este,oeste,cap_oeste
-ABC,F,4,0,,0,,0,CDA,12,,0
-CDA,F,3,0,,0,,0,,0,ABC,12

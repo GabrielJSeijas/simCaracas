@@ -19,6 +19,7 @@ void procesoZona(GrafoCiudad *grafo,
 /// @param grafo           Puntero al grafo de la ciudad
 /// @param tuberiaLectura  Descriptor de lectura de la tubería de tránsito
 /// @param configuracion   Parámetros de simulación
+void* hiloZona(void* arg);
 void procesoTransito(GrafoCiudad *grafo,
                      int tuberiaLectura,
                      Configuracion configuracion);

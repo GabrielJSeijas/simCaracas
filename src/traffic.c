@@ -16,7 +16,7 @@ static Caravana *caravanasVespertinas = NULL;
 static pthread_mutex_t mutexTrafico   = PTHREAD_MUTEX_INITIALIZER;
 
 void inicializarSistemaTrafico(GrafoCiudad *ciudad) {
-    (void)ciudad;
+    (void)ciudad; // Marcar como usado para silenciar warning
     caravanasMatutinas  = NULL;
     caravanasVespertinas = NULL;
 }

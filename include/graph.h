@@ -44,10 +44,9 @@ typedef struct {
     Zona            *zonas;
     int              totalZonas;
     int              capacidadReservada;
-
     int              totalEmpleados;
     int              totalDesempleados;
-
+    int              nivelMaximoZonas; 
     pthread_rwlock_t cerrojoGrafo;
 } GrafoCiudad;
 
