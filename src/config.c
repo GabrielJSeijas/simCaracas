@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Parsea los argumentos de línea de comandos y retorna la configuración resultante
 Configuracion parsearArgumentos(int argc, char *argv[]) {
     // Valores por defecto
     Configuracion configuracion = {
@@ -32,7 +33,7 @@ Configuracion parsearArgumentos(int argc, char *argv[]) {
             }
         }
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) {
-            // Guardamos una copia del nombre de archivo
+            // Guardar una copia del nombre de archivo
             configuracion.archivoCarga = strdup(argv[++i]);
         }
     }
@@ -40,6 +41,7 @@ Configuracion parsearArgumentos(int argc, char *argv[]) {
     return configuracion;
 }
 
+// Muestra la configuración actual por pantalla
 void mostrarConfiguracion(const Configuracion *config) {
     printf("Parámetros de la simulación:\n");
     printf("  • Ticks por día      : %d\n",   config->ticksPorDia);

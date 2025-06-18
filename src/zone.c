@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
+// Crea un nodo para la lista prioritaria de zonas
 NodoListaZona* crearNodoListaZona(Zona *zona, int prioridad) {
     NodoListaZona *nodo = malloc(sizeof(NodoListaZona));
     if (!nodo) return NULL;
@@ -13,9 +14,9 @@ NodoListaZona* crearNodoListaZona(Zona *zona, int prioridad) {
     nodo->prioridad = prioridad;
     nodo->siguiente = NULL;
     return nodo;
-    
 }
 
+// Inserta un nodo en la lista prioritaria según la prioridad
 void insertarNodoPorPrioridad(NodoListaZona **lista,
                               Zona *zona,
                               int prioridad)
@@ -23,10 +24,7 @@ void insertarNodoPorPrioridad(NodoListaZona **lista,
     NodoListaZona *nuevo = crearNodoListaZona(zona, prioridad);
     if (!nuevo) return;
 
-    // (opcional) recabar la disponibilidad real, aunque no se use luego
     pthread_mutex_lock(&zona->mutexZona);
-    int disponibles = zona->disponibles;
-    (void)disponibles;
     pthread_mutex_unlock(&zona->mutexZona);
 
     if (*lista == NULL || prioridad > (*lista)->prioridad) {
@@ -44,6 +42,7 @@ void insertarNodoPorPrioridad(NodoListaZona **lista,
     }
 }
 
+// Extrae la zona con mayor prioridad de la lista
 Zona* extraerZonaMayorPrioridad(NodoListaZona **lista) {
     if (*lista == NULL) return NULL;
     NodoListaZona *cabeza = *lista;
@@ -53,6 +52,7 @@ Zona* extraerZonaMayorPrioridad(NodoListaZona **lista) {
     return resultado;
 }
 
+// Libera la memoria de la lista de zonas
 void liberarListaZonas(NodoListaZona *lista) {
     while (lista) {
         NodoListaZona *sig = lista->siguiente;
@@ -61,6 +61,7 @@ void liberarListaZonas(NodoListaZona *lista) {
     }
 }
 
+// Búsqueda BFS priorizada por disponibilidad para encontrar fuente o sumidero
 void buscarZonaBFS(Zona *inicio,
                    bool buscarSumidero,
                    GrafoCiudad *grafo)
@@ -117,9 +118,8 @@ void buscarZonaBFS(Zona *inicio,
     free(visitado);
 }
 
-void asignarResidentesATrabajo(Zona *fuente,
-                               Zona *sumidero,
-                               GrafoCiudad *grafo)
+// Asigna residentes de una fuente a un sumidero
+void asignarResidentesATrabajo(Zona *fuente, Zona *sumidero, GrafoCiudad *grafo)
 {
     pthread_mutex_lock(&fuente->mutexZona);
     pthread_mutex_lock(&sumidero->mutexZona);
@@ -130,15 +130,9 @@ void asignarResidentesATrabajo(Zona *fuente,
     }
 
     if (aAsignar > 0) {
-        fuente->disponibles  -= aAsignar;
-        sumidero->disponibles -= aAsignar;
-
-        pthread_rwlock_wrlock(&grafo->cerrojoGrafo);
-        if (fuente->esFuente) {
-            grafo->totalEmpleados   += aAsignar;
-            grafo->totalDesempleados -= aAsignar;
-        }
-        pthread_rwlock_unlock(&grafo->cerrojoGrafo);
+        fuente->disponibles      -= aAsignar;
+        sumidero->disponibles    -= aAsignar;
+        sumidero->empleadosPresentes += aAsignar;
 
         printf("Asignados %d residentes de %s a %s\n",
                aAsignar, fuente->codigo, sumidero->codigo);
@@ -148,6 +142,7 @@ void asignarResidentesATrabajo(Zona *fuente,
     pthread_mutex_unlock(&fuente->mutexZona);
 }
 
+// Actualiza los puntos y niveles de las zonas según la hora del día
 void actualizarPuntosZona(GrafoCiudad *grafo,
                           bool esMañana)
 {
@@ -184,4 +179,39 @@ void actualizarPuntosZona(GrafoCiudad *grafo,
     }
 
     pthread_rwlock_unlock(&grafo->cerrojoGrafo);
+}
+
+// Suma puntos SOLO a los sumideros al finalizar la mañana
+void sumarPuntosSumideros(GrafoCiudad *grafo) {
+    for (int i = 0; i < grafo->totalZonas; i++) {
+        Zona *z = &grafo->zonas[i];
+        if (!z->esFuente) { // Es sumidero
+            z->puntos += z->empleadosPresentes;
+            // Chequea si sube de nivel
+            int capacidad = 1 << z->nivel;
+            int puntosParaSubir = capacidad * capacidad;
+            if (z->puntos >= puntosParaSubir) {
+                z->nivel++;
+                printf("%s subió a nivel %d\n", z->codigo, z->nivel);
+                z->puntos = 0; // O deja el excedente, según la lógica deseada
+            }
+        }
+    }
+}
+
+// Suma puntos SOLO a las fuentes al finalizar la tarde
+void sumarPuntosFuentes(GrafoCiudad *grafo) {
+    for (int i = 0; i < grafo->totalZonas; i++) {
+        Zona *z = &grafo->zonas[i];
+        if (z->esFuente) {
+            z->puntos += z->empleadosPresentes;
+            int capacidad = 1 << z->nivel;
+            int puntosParaSubir = capacidad * capacidad;
+            if (z->puntos >= puntosParaSubir) {
+                z->nivel++;
+                printf("%s subió a nivel %d\n", z->codigo, z->nivel);
+                z->puntos = 0;
+            }
+        }
+    }
 }

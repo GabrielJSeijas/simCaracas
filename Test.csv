@@ -1,6 +1,6 @@
-codigo,tipo,nivel,puntos,norte,cap_norte,sur,cap_sur,este,cap_este,oeste,cap_oeste
-A01,F,2,10,,,,A05,150,,,,
-A02,F,2,10,A05,150,,,,,,
-A03,S,2,10,,,,,,A05,150,
-A04,S,2,10,,,,,A05,150,,
-A05,F,4,20,A01,150,A02,150,A03,150,A04,150
+codigo, tipo, nivel, puntos, norte, cap_norte, sur, cap_sur, este, cap_este, oeste, cap_oeste
+A01   , F   ,     2,      0, A04  ,       150,    ,        , A02 ,      150,      ,          , 
+A02   , F   ,     3,      0, A05  ,       150,    ,        , A01 ,      150,      ,          , 
+A03   , F   ,     2,      0, A05  ,       150,    ,        ,     ,         ,      ,          , 
+A04   , S   ,     3,      0,      ,         0, A01,     150, A05 ,      150,      ,          0
+A05   , S   ,     4,      0, A03  ,       150, A02,     150,     ,         ,   A04,        150

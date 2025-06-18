@@ -1,11 +1,9 @@
-// src/graph.c
-
 #include "graph.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <assert.h>
 
+// Inicializa la estructura del grafo
 void iniciarGrafo(GrafoCiudad *grafo) {
     grafo->zonas             = malloc(sizeof(Zona) * MAX_ZONAS);
     assert(grafo->zonas != NULL);
@@ -18,6 +16,7 @@ void iniciarGrafo(GrafoCiudad *grafo) {
     pthread_rwlock_init(&grafo->cerrojoGrafo, NULL);
 }
 
+// Libera los recursos asociados al grafo
 void destruirGrafo(GrafoCiudad *grafo) {
     pthread_rwlock_wrlock(&grafo->cerrojoGrafo);
     for (int i = 0; i < grafo->totalZonas; i++) {
@@ -31,6 +30,7 @@ void destruirGrafo(GrafoCiudad *grafo) {
     pthread_rwlock_destroy(&grafo->cerrojoGrafo);
 }
 
+// Agrega una nueva zona al grafo
 Zona* agregarZona(GrafoCiudad *grafo,
                   const char *codigo,
                   int nivel,
@@ -39,14 +39,14 @@ Zona* agregarZona(GrafoCiudad *grafo,
     if (strlen(codigo) != 3) return NULL;
 
     pthread_rwlock_wrlock(&grafo->cerrojoGrafo);
-    /* Verificar duplicado */
+    // Verificar si el código ya existe
     for (int i = 0; i < grafo->totalZonas; i++) {
         if (strcmp(grafo->zonas[i].codigo, codigo) == 0) {
             pthread_rwlock_unlock(&grafo->cerrojoGrafo);
             return NULL;
         }
     }
-    /* Redimensionar si es necesario */
+    // Redimensionar si es necesario
     if (grafo->totalZonas >= grafo->capacidadReservada) {
         grafo->capacidadReservada *= 2;
         grafo->zonas = realloc(
@@ -55,7 +55,7 @@ Zona* agregarZona(GrafoCiudad *grafo,
         );
         assert(grafo->zonas != NULL);
     }
-    /* Inicializar la nueva zona */
+    // Inicializar la nueva zona
     Zona *z = &grafo->zonas[grafo->totalZonas++];
     strncpy(z->codigo, codigo, 3);
     z->codigo[3] = '\0';
@@ -77,6 +77,7 @@ Zona* agregarZona(GrafoCiudad *grafo,
     return z;
 }
 
+// Conecta dos zonas en una dirección específica
 bool conectarZonas(GrafoCiudad *grafo,
                    Zona *z1,
                    Zona *z2,
@@ -134,6 +135,7 @@ error:
     return false;
 }
 
+// Busca una zona por su código
 Zona* buscarZona(GrafoCiudad *grafo,
                  const char *codigo)
 {
@@ -148,7 +150,7 @@ Zona* buscarZona(GrafoCiudad *grafo,
     return NULL;
 }
 
-
+// Devuelve la dirección opuesta
 Direccion direccionOpuesta(Direccion dir) {
     switch (dir) {
         case NORTE: return SUR;
@@ -159,8 +161,7 @@ Direccion direccionOpuesta(Direccion dir) {
     }
 }
 
-
-
+// Modifica la capacidad de la arteria entre dos zonas conectadas
 bool ampliarArteria(GrafoCiudad *grafo,
                    Zona *z1,
                    Zona *z2,

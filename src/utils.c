@@ -1,18 +1,17 @@
 #include <stdbool.h>
-#include "graph.h"
-#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <pthread.h>
+#include "graph.h"
+#include "utils.h"
 
 #define UMBRAL_SATURACION_1 0.5f
 #define UMBRAL_SATURACION_2 1.0f
 #define UMBRAL_SATURACION_3 1.5f
 #define LINEAS_ZONA 4
 
-
-
+// Verifica si el código de zona es válido (3 letras)
 bool esCodigoZonaValido(const char *codigo) {
     if (strlen(codigo) != 3) return false;
     for (int i = 0; i < 3; i++) {
@@ -21,17 +20,17 @@ bool esCodigoZonaValido(const char *codigo) {
     return true;
 }
 
+// Calcula la cantidad de puntos requeridos según el nivel
 int calcularPuntosRequeridos(int nivel) {
     int capacidad = 1 << nivel; // 2^nivel
     return capacidad * capacidad;
 }
 
+// Muestra el estado del tráfico en cada zona (solo dirección norte)
 void mostrarEstadoTrafico(GrafoCiudad *grafo) {
-    // Lock de lectura global
     pthread_rwlock_rdlock(&grafo->cerrojoGrafo);
     printf("\nEstado del tráfico:\n");
     for (int i = 0; i < grafo->totalZonas; i++) {
-        // Lock por zona
         pthread_mutex_lock(&grafo->zonas[i].mutexZona);
 
         printf("[%s] ", grafo->zonas[i].codigo);
@@ -44,8 +43,7 @@ void mostrarEstadoTrafico(GrafoCiudad *grafo) {
             else if (proporcion >= UMBRAL_SATURACION_1) printf("! ");
             else                                      printf(" ");
         }
-
-        // Aquí podrías añadir Sur, Este y Oeste de forma similar...
+        // Se pueden agregar Sur, Este y Oeste de forma similar
 
         printf("\n");
         pthread_mutex_unlock(&grafo->zonas[i].mutexZona);
@@ -53,6 +51,7 @@ void mostrarEstadoTrafico(GrafoCiudad *grafo) {
     pthread_rwlock_unlock(&grafo->cerrojoGrafo);
 }
 
+// Muestra los detalles de una zona específica
 void mostrarDetallesZona(Zona *zona) {
     pthread_mutex_lock(&zona->mutexZona);
     printf("Código           : %s\n", zona->codigo);
@@ -65,7 +64,9 @@ void mostrarDetallesZona(Zona *zona) {
     pthread_mutex_unlock(&zona->mutexZona);
 }
 
+// Asigna coordenadas a cada zona para su representación en grid
 void asignarCoordenadas(GrafoCiudad *grafo) {
+    // Inicializa todas las coordenadas a un valor fuera de rango
     for (int i = 0; i < grafo->totalZonas; i++) {
         grafo->zonas[i].x = 9999;
         grafo->zonas[i].y = 9999;
@@ -75,6 +76,7 @@ void asignarCoordenadas(GrafoCiudad *grafo) {
     grafo->zonas[0].x = 0;
     grafo->zonas[0].y = 0;
 
+    // Propaga coordenadas para zonas conectadas
     bool cambiado = true;
     while (cambiado) {
         cambiado = false;
@@ -104,8 +106,18 @@ void asignarCoordenadas(GrafoCiudad *grafo) {
             }
         }
     }
+
+    // Asigna posiciones artificiales a zonas completamente aisladas
+    int next_isolated = 2; // fila alta para aislados, columna fija
+    for (int i = 0; i < grafo->totalZonas; i++) {
+        if (grafo->zonas[i].x == 9999 && grafo->zonas[i].y == 9999) {
+            grafo->zonas[i].x = next_isolated++;
+            grafo->zonas[i].y = 3;
+        }
+    }
 }
 
+// Imprime la ciudad en formato de grid avanzado
 void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
     int x_min = 9999, x_max = -9999, y_min = 9999, y_max = -9999;
     for (int i = 0; i < grafo->totalZonas; i++) {
@@ -116,7 +128,7 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
     }
 
     for (int x = x_max; x >= x_min; x--) {
-        // IMPRIME BLOQUE DE 4 LÍNEAS POR ZONA EN LA FILA
+        // Imprime bloque de 4 líneas por zona en la fila
         for (int sublinea = 0; sublinea < LINEAS_ZONA; sublinea++) {
             for (int y = y_min; y <= y_max; y++) {
                 Zona *z = NULL;
@@ -126,8 +138,8 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
                 if (z) {
                     switch (sublinea) {
                         case 0: printf("%-6s    ", z->codigo); break;                  // Código
-                        case 1: printf("Nvl%-3d    ", z->nivel); break;                // Nivel
-                        case 2: // Desempleados/libres
+                        case 1: printf("Nv%-3d    ", z->nivel); break;                // Nivel
+                        case 2:
                             if (z->esFuente)
                                 printf("Desem:%-3d ", z->disponibles);
                             else
@@ -138,7 +150,7 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
                 } else {
                     printf("          "); // Espacio vacío
                 }
-                // Carretera ESTE-OESTE (solo en la línea 2, por ejemplo)
+                // Carretera ESTE-OESTE (solo en la línea 2)
                 if (y < y_max && sublinea == 2) {
                     Zona *zE = NULL;
                     for (int i = 0; i < grafo->totalZonas; i++)
@@ -160,13 +172,13 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
             printf("\n");
         }
 
-        // CAPACIDAD ESTE-OESTE (debajo de cada fila de zonas)
+        // Capacidad ESTE-OESTE (debajo de cada fila de zonas)
         for (int y = y_min; y <= y_max; y++) {
             Zona *z = NULL;
             for (int i = 0; i < grafo->totalZonas; i++)
                 if (grafo->zonas[i].x == x && grafo->zonas[i].y == y)
                     z = &grafo->zonas[i];
-            if (z) printf("        "); // espacio, puedes imprimir otra cosa aquí si quieres
+            if (z) printf("        ");
             else printf("        ");
             // Capacidad ESTE-OESTE
             if (y < y_max) {
@@ -182,7 +194,7 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
         }
         printf("\n");
 
-        // CARRETERA SUR y CAPACIDAD SUR
+        // Carretera SUR y capacidad SUR
         if (x > x_min) {
             // Congestión SUR
             for (int y = y_min; y <= y_max; y++) {
@@ -200,7 +212,6 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
                 } else {
                     printf("        ");
                 }
-                // Espacio entre columnas
                 if (y < y_max) printf("       ");
             }
             printf("\n");
@@ -220,4 +231,30 @@ void imprimirCiudadEnGridAvanzado(GrafoCiudad *grafo) {
             printf("\n");
         }
     }
+}
+
+// Actualiza los totales globales de empleados y desempleados
+void actualizarTotalesEmpleo(GrafoCiudad *ciudad) {
+    int totalEmpleados = 0, totalDesempleados = 0;
+    pthread_rwlock_rdlock(&ciudad->cerrojoGrafo);
+    for (int i = 0; i < ciudad->totalZonas; i++) {
+        Zona *z = &ciudad->zonas[i];
+        if (z->esFuente)
+            totalDesempleados += z->disponibles;
+        else
+            totalEmpleados += z->empleadosPresentes;
+    }
+    pthread_rwlock_unlock(&ciudad->cerrojoGrafo);
+    ciudad->totalEmpleados = totalEmpleados;
+    ciudad->totalDesempleados = totalDesempleados;
+}
+
+// Muestra un resumen del empleo en la ciudad
+void mostrarResumenEmpleo(const GrafoCiudad *ciudad) {
+    pthread_rwlock_rdlock(&ciudad->cerrojoGrafo);
+    printf("\n===== Resumen del día =====\n");
+    printf("Empleados trabajando : %d\n", ciudad->totalEmpleados);
+    printf("Desempleados en casa : %d\n", ciudad->totalDesempleados);
+    printf("===========================\n");
+    pthread_rwlock_unlock(&ciudad->cerrojoGrafo);
 }
