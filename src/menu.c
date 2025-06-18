@@ -5,6 +5,7 @@
 #include "graph.h"
 #include "fileio.h"
 #include "utils.h"
+#include "zone.h"
 
 // Menú para agregar una zona al grafo
 void agregarZonaMenu(GrafoCiudad *grafo) {
@@ -47,6 +48,7 @@ void agregarZonaMenu(GrafoCiudad *grafo) {
 
 // Conecta dos zonas en la primera dirección disponible (bidireccional)
 int conectarZonasBidireccional(GrafoCiudad *grafo, Zona *a, Zona *b, int capacidad) {
+    (void)grafo;
     if (!a->norte && !b->sur) {
         a->norte = b; a->capacidadNorte = capacidad;
         b->sur = a;  b->capacidadSur   = capacidad;

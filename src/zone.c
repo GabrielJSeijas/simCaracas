@@ -121,6 +121,7 @@ void buscarZonaBFS(Zona *inicio,
 // Asigna residentes de una fuente a un sumidero
 void asignarResidentesATrabajo(Zona *fuente, Zona *sumidero, GrafoCiudad *grafo)
 {
+     (void)grafo; 
     pthread_mutex_lock(&fuente->mutexZona);
     pthread_mutex_lock(&sumidero->mutexZona);
 

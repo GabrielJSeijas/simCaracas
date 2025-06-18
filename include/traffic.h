@@ -24,4 +24,6 @@ void simularTraficoVespertino(GrafoCiudad *ciudad, int ticksPorDia);
 // Simula un día completo de tráfico en la ciudad
 void simularDia(GrafoCiudad *grafo, Configuracion configuracion);
 
+void simularFlujoVecinosInmediatos(GrafoCiudad *ciudad);
+
 #endif // TRAFFIC_H

@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "menu.h"
 #include "config.h"
 #include "graph.h"
 #include "fileio.h"
@@ -11,6 +12,7 @@
 #include "utils.h"
 #include "pipes.h"
 #include "process.h"
+#include "zone.h"
 
 // Variables globales para pipes y PIDs
 int tuberiaZonaEsc = -1, tuberiaZonaLec = -1, tuberiaTransitoEsc = -1, tuberiaTransitoLec = -1;

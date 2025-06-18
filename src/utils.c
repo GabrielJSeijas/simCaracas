@@ -11,6 +11,7 @@
 #define UMBRAL_SATURACION_3 1.5f
 #define LINEAS_ZONA 4
 
+
 // Verifica si el código de zona es válido (3 letras)
 bool esCodigoZonaValido(const char *codigo) {
     if (strlen(codigo) != 3) return false;
@@ -251,10 +252,10 @@ void actualizarTotalesEmpleo(GrafoCiudad *ciudad) {
 
 // Muestra un resumen del empleo en la ciudad
 void mostrarResumenEmpleo(const GrafoCiudad *ciudad) {
-    pthread_rwlock_rdlock(&ciudad->cerrojoGrafo);
+    pthread_rwlock_rdlock((pthread_rwlock_t*)&ciudad->cerrojoGrafo);
     printf("\n===== Resumen del día =====\n");
     printf("Empleados trabajando : %d\n", ciudad->totalEmpleados);
     printf("Desempleados en casa : %d\n", ciudad->totalDesempleados);
     printf("===========================\n");
-    pthread_rwlock_unlock(&ciudad->cerrojoGrafo);
+     pthread_rwlock_unlock((pthread_rwlock_t*)&ciudad->cerrojoGrafo);
 }

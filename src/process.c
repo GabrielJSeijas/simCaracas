@@ -91,6 +91,7 @@ void* hiloZona(void* arg) {
 
 // Proceso hijo: Zonas
 void procesoZona(GrafoCiudad *grafo, int tuberiaLectura, int tuberiaEscritura, Configuracion config) {
+     (void)config;
     while (1) {
         MensajeDia msg;
         if (!recibirMensaje(tuberiaLectura, &msg, sizeof(MensajeDia))) continue;

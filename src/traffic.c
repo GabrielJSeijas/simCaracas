@@ -13,7 +13,7 @@
 
 static Caravana *caravanasMatutinas  = NULL;
 static Caravana *caravanasVespertinas = NULL;
-static pthread_mutex_t mutexTrafico   = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutexTrafico __attribute__((unused)) = PTHREAD_MUTEX_INITIALIZER;
 
 // Inicializa el sistema de tráfico
 void inicializarSistemaTrafico(GrafoCiudad *ciudad) {
